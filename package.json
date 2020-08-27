@@ -1,8 +1,14 @@
 {
   "dependencies": {
+    "axios": "^0.19.2",
+    "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "firebase-admin": "^9.0.0",
-    "node-modules": "^1.0.1"
+    "node-modules": "^1.0.1",
+    "proxy": "http://localhost:3000",
+    "request": "^2.88.2",
+    "sequelize": "^6.3.4",
+    "sqlite3": "^5.0.0"
   }
 }

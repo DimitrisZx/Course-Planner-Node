@@ -1,0 +1,12 @@
+{
+  "sqltools.connections": [
+    {
+      "database": "${workspaceFolder:coursePlannerBackend}/sample.db",
+      "driver": "SQLite",
+      "group": "1",
+      "name": "test",
+      "previewLimit": 50
+    }
+  ],
+  "sqltools.useNodeRuntime": true
+}
