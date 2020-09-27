@@ -4,18 +4,14 @@ const jsonParser = require('body-parser').json();
 const express = require('express');
 const app = express();
 const path = require('path');
-const SQLite = require('./sqlite');
 const bodyParser = require('body-parser');
 const axios = require('axios');
-const { getUserInfo, createUserDocument } = require('./firestore')
-// Config SQLite Database
-const dbClient = new SQLite('yo');
-console.log(dbClient.getName());
+const { getUserInfo, createUserDocument, writeUser } = require('./firestoreClient')
 
 // User defined Constants
 const PORT = process.env.PORT || 5000;
 const ALLOWEDHOST = 'http://localhost:3000';
-const JSONFILE = 'lessonsList.json';
+const JSONFILE = 'lessonsList2.json';
 const firebaseAPIKey = 'AIzaSyCXv6mFcNW0jYXr86a1hE3fRwEQflO8xbQ';
 
 // Get lessons list from json file
@@ -83,6 +79,10 @@ app.get('/lessons', (req, res) => {
 app.post('/updateSelectedLessons', jsonParser, (req, res) => {
   console.log(req.body);
   res.send('ok')
+})
+
+app.get('/testWriteUser', () => {
+  writeUser();
 })
 
 // Start Listening

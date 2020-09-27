@@ -1,3 +1,4 @@
+const { User } = require('./models');
 const DBKEY = require('./serviceAccountKey.json');
 
 // Configure Firestore
@@ -10,6 +11,12 @@ const db = admin.firestore();
 async function getdb(collection) {
   const snapshot = await db.collection(collection).get();
   snapshot.forEach(doc => console.log(doc.data().lessonsList));
+}
+
+const writeUser = async ({ email, password }) => {
+  const newUser = new User(email, password);
+  const res = await db.collection('users').doc('TEST').set(newUser);
+  return res;
 }
 
 const updateUserInfo = async (userId, data) => {
@@ -29,4 +36,5 @@ const createUserDocument = async (userId, data) => {
   return res
 }
 
-module.exports = {updateUserInfo, getUserInfo, createUserDocument};
+
+module.exports = {updateUserInfo, getUserInfo, createUserDocument, writeUser};
