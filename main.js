@@ -6,56 +6,63 @@ const app = express();
 const path = require('path');
 const bodyParser = require('body-parser');
 const axios = require('axios');
-const { getUserInfo, createUserDocument, writeUser } = require('./firestoreClient')
+const {
+  getUserInfo,
+  createUserDocument,
+  signUpUser,
+  loginUser,
+  updateSchedule,
+  getSavedSelectedLessons, 
+  getLessonsFromFirestore,
+} = require('./firestoreClient')
 
 // User defined Constants
 const PORT = process.env.PORT || 5000;
 const ALLOWEDHOST = 'http://localhost:3000';
 const JSONFILE = 'lessonsList2.json';
-const firebaseAPIKey = 'AIzaSyCXv6mFcNW0jYXr86a1hE3fRwEQflO8xbQ';
 
 // Get lessons list from json file
 const lessonsList = JSON.parse(fs.readFileSync(JSONFILE)).lessonsList;
+let lessonsListNew = []
 
+async function populateList() {
+  lessonsListNew = await getLessonsFromFirestore()
+}
+function returnLessonList() {
+  return lessonsListNew;
+}
+populateList();
 // Configure Express Server
 app.use(cors({ origin: ALLOWEDHOST }))
 app.use(express.static(path.join(__dirname, 'build')));
 
-// Set-up endpoints
-
+// Endpoints
+app.get('/checklist', () => console.log(lessonsListNew[0].days))
 app.post('/requestSignUp', jsonParser, async (req, res) => {
-  const signUpURL = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${firebaseAPIKey}`;
-  const { email, password } = req.body;
-  console.log(email, password)
+  await signUpUser(req.body);
+  const  userDataResponse = await loginUser({email: req.body.email, password: req.body.password})
+  const {name, registryNumber, semester, email} = userDataResponse;
 
-  const response = await axios.post(signUpURL, {
-    email, password, returnSecureToken: true,
-  })
-  console.log(response)
-  if (response.status === 200) {
-    res.json({success: true, payload: response.data})
+  if (userDataResponse) {
+    res.json({ success: true, payload: {name, registryNumber, semester, email} })
   } else {
     res.json({ success: false, errorMsg: 'Something went wrong :(' })
   }
 });
 
 app.post('/requestLogin', jsonParser, async (req, res) => {
-  const signInURL = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${firebaseAPIKey}`;
-  const { email, password } = req.body;
-  const requestPayload = { email, password, returnSecureToken: true }
-  const response = await axios.post(signInURL, requestPayload)
-  console.log(response.data)
-
-  if (response.data.registered) {
-    res.json({ success: true, payload: response.data });
+  const  userDataResponse = await loginUser({email: req.body.email, password: req.body.password})
+  const {name, registryNumber, semester, email} = userDataResponse;
+  console.log(userDataResponse)
+  if (userDataResponse) {
+    res.json({ success: true, payload: {name, registryNumber, semester, email} })
   } else {
-    res.json({success: false, errorMsg: 'Invalid Credentials'})
+    res.json({ success: false, errorMsg: 'Something went wrong :(' })
   }
 });
 
 app.post('/requestProfileEdit', jsonParser, async (req, res) => {
   const { name, rn, semester, localId } = req.body;
-  console.log(name, rn, semester, localId);
   const data = {
     name,
     rn,
@@ -63,7 +70,6 @@ app.post('/requestProfileEdit', jsonParser, async (req, res) => {
     id: localId,
   };
   const response = createUserDocument(localId, data);
-  console.log(response)
   res.json({success: false})
 })
 
@@ -72,17 +78,39 @@ app.get('/userInfo', (req, res) => {
 })
 
 app.get('/lessons', (req, res) => {
-  console.log('responding')
-  res.json({ lessons: lessonsList });
+  /* 
+    use function to get lessons because getting them is asynchronous 
+    and setting the plain variable would always provide an emtpy array. 
+  */
+  res.json({ lessons: returnLessonList() }); 
 })
 
 app.post('/updateSelectedLessons', jsonParser, (req, res) => {
-  console.log(req.body);
   res.send('ok')
 })
 
-app.get('/testWriteUser', () => {
-  writeUser();
+// NEW API
+app.post('/signUpUser', async function (req, res) {
+
+  const response = await signUpUser(req.body);
+  res.send('user signed up');
+})
+
+app.get('/testLoginUser', async () => {
+  const response = await loginUser({password: '1234', email: 'myemail@eg.gr'});
+  if (response) {
+    return response;
+  } else {
+    return { msg: 'wrong credentials' }
+  };
+})
+
+app.get('getSavedSelectedLessons', async (req, res) => {
+  console.log(req)
+})
+
+app.post('/updateSchedule', jsonParser, async function (req, res) {
+  const response = await updateSchedule(req.body);
 })
 
 // Start Listening

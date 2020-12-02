@@ -13,14 +13,28 @@ async function getdb(collection) {
   snapshot.forEach(doc => console.log(doc.data().lessonsList));
 }
 
-const writeUser = async ({ email, password }) => {
-  const newUser = new User(email, password);
-  const res = await db.collection('users').doc('TEST').set(newUser);
+const signUpUser = async({email, password, semester, registryNumber, name}) => {
+  const user = new User(email, password, semester, name, registryNumber)
+  const res = await db.collection('users').doc(registryNumber).set({...user});
   return res;
 }
 
-const updateUserInfo = async (userId, data) => {
+const createUserDocument = async (userId, data) => {
+  const res = await db.collection('users').doc(userId).set(data);
+  console.log(res);
+  return res;
+}
 
+const loginUser = async ({ email, password }) => {
+  const dbRef = db.collection('users').where('email', '==', email).where('password', '==', password);
+  const snapshot = await dbRef.get();
+  let user;
+
+  snapshot.forEach(doc => {
+    user = doc.data() 
+  });
+  console.log(user)
+  return user;
 }
 
 const getUserInfo = async () => {
@@ -30,11 +44,49 @@ const getUserInfo = async () => {
   });
 }
 
-const createUserDocument = async (userId, data) => {
-  const res = await db.collection('users').doc(userId).set(data);
-  console.log(res)
-  return res
+const updateUserInfo = async (userId, data) => {
+
 }
 
+const updateSchedule = async (requestBody) => {
+  const { userId, selectedlessons } = requestBody;
+  console.log(requestBody)
+  const res = await db.collection('users').doc(userId).update({selectedLessons: selectedlessons});
 
-module.exports = {updateUserInfo, getUserInfo, createUserDocument, writeUser};
+}
+
+const getSavedSelectedLessons = async (requestBody) => {
+  const { userId } = requestBody;
+  const doc = await db.collection('users').doc(userId).get();
+  console.log(doc)
+}
+
+async function writeSingleEntry() {
+  const lessonsList = JSON.parse(fs.readFileSync(JSONFILE)).lessonsList;
+  const savableStruct = {};
+  lessonsList.forEach(lesson => {
+    savableStruct[lesson.name] = JSON.stringify(lesson);
+  })
+  await db.collection('lessons').doc('lessons').set(savableStruct)
+}
+
+async function getLessonsFromFirestore() {
+  const resp = await db.collection('lessons').doc('lessons').get()
+  const list = [];
+  for (let lesson in resp.data()) {
+    list.push(JSON.parse(resp.data()[lesson]))
+  }
+
+  return list;
+}
+
+module.exports = {
+  getSavedSelectedLessons,
+  updateUserInfo,
+  getUserInfo,
+  createUserDocument,
+  signUpUser,
+  loginUser,
+  updateSchedule,
+  getLessonsFromFirestore,
+};
