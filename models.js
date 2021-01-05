@@ -1,17 +1,20 @@
 class User {
   selectedLessons = [];
+  registeredLessons = [];
   constructor(
     email,
     password,
     semester,
     name,
     registryNumber,
+    uid
   ) {
     this.email = email;
     this.password = password;
     this.name = name;
     this.registryNumber = registryNumber;
     this.semester = semester;
+    this.uuid = uid;
   }
   
 } 
@@ -31,4 +34,25 @@ class Lesson {
   ]
 }
 
-module.exports = { User, Lesson }
+class Semester {
+  lessons = [];
+  semesterName = '';
+  schoolName = '';
+
+  constructor(lessons, semesterName, schoolName) {
+    this.lessons = lessons;
+    this.semesterName = semesterName;
+    this.schoolName = schoolName;
+  }
+}
+
+class School {
+  schoolName = '';
+  semesters = [];
+  constructor(schoolName, semesters) {
+    this.schoolName = schoolName;
+    this.semesters = semesters;
+  }
+}
+
+module.exports = { User, Lesson, Semester, School }

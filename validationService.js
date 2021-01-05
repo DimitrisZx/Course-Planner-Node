@@ -1,15 +1,31 @@
-export class Validator {
-  registryNumberLength = 5;
-  emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+module.exports = class ValidatorHelper {
+  static registryNumberLength = 5;
+  static emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
 
-  validateRegistryNumber = input =>
-    !isNaN(input) &&
-    input.length === this.registryNumberLength;
+  static validateRegistryNumber (input) {
+    return !isNaN(input) && input.length === this.registryNumberLength;
+  }
 
-  validateSemester = input => 
-    !isNaN(input) &&
-    +input > 0
+  static validateSemester (input) {
+    return !isNaN(input) && +input > 0;
+  } 
 
-  validateEmail = input =>
-    this.emailRegex.test(input);
+  static validateEmail (input) {
+    return this.emailRegex.test(input);
+  }
+
+  static isValidScheduleSchema (input) {
+    const requiredFields = [
+      "name",
+      "day",
+      "hours",
+      "semester",
+      "type",
+      "professor",
+      "days"
+    ];
+    return requiredFields
+      .every(field => Object.keys(input).includes(field));
+
+  }
 }

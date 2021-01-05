@@ -1,5 +1,6 @@
 const { User } = require('./models');
 const DBKEY = require('./serviceAccountKey.json');
+const {v4: uuid } = require('uuid');
 
 // Configure Firestore
 const admin = require('firebase-admin');
@@ -13,9 +14,10 @@ async function getdb(collection) {
   snapshot.forEach(doc => console.log(doc.data().lessonsList));
 }
 
-const signUpUser = async({email, password, semester, registryNumber, name}) => {
-  const user = new User(email, password, semester, name, registryNumber)
-  const res = await db.collection('users').doc(registryNumber).set({...user});
+const signUpUser = async({ email, password, semester, registryNumber, name }) => {
+  const uniqueId = uuid();
+  const user = new User(email, password, semester, name, registryNumber, uniqueId)
+  const res = await db.collection('users').doc(registryNumber).set({ ...user });
   return res;
 }
 
@@ -33,7 +35,6 @@ const loginUser = async ({ email, password }) => {
   snapshot.forEach(doc => {
     user = doc.data() 
   });
-  console.log(user)
   return user;
 }
 
@@ -44,8 +45,17 @@ const getUserInfo = async () => {
   });
 }
 
-const updateUserInfo = async (userId, data) => {
+const updateUserInfo = async (payload) => {
+  const dbRef = db.collection('users').where('uuid', '==', payload.uuid);
+  const snapshot = await dbRef.get();
+  let user;
 
+  snapshot.forEach((item) => {
+    user = item.data()
+  })
+  await db.collection('users').doc(user.registryNumber).update({ registeredLessons: payload.registeredLessons }) 
+  const res = await (await db.collection('users').doc(user.registryNumber).get()).data();
+  return res.registeredLessons;
 }
 
 const updateSchedule = async (requestBody) => {
@@ -80,6 +90,32 @@ async function getLessonsFromFirestore() {
   return list;
 }
 
+async function getUserRegisteredLessons(uuid) {
+  const dbRef = db.collection('users').where('uuid', '==', uuid);
+  const snapshot = await dbRef.get();
+  let user;
+
+  snapshot.forEach((item) => {
+    user = item.data()
+  })
+  const res = await (await db.collection('users').doc(user.registryNumber).get()).data();
+  return res.registeredLessons;
+}
+
+async function uploadSchedule(schoolName, semester) {
+  writeSingleEntry();
+}
+
+async function submitSchedule(schoolName, semester, scheduleObject) {
+  console.log(
+    "Saving Schedule to firebase:",
+    schoolName,
+    semester,
+    scheduleObject,
+  )
+  db.collection('lessons').doc(schoolName).set(savableStruct);
+}
+
 module.exports = {
   getSavedSelectedLessons,
   updateUserInfo,
@@ -89,4 +125,16 @@ module.exports = {
   loginUser,
   updateSchedule,
   getLessonsFromFirestore,
+  getUserRegisteredLessons,
+  uploadSchedule,
+  submitSchedule
 };
+
+async function writeSingleEntry(schoolName, semesterType, schedule) {
+  const lessonsList = JSON.parse(fs.readFileSync(JSONFILE)).lessonsList; // REPLACE WITH UPLOADED JSON
+  const savableStruct = {};
+  lessonsList.forEach(lesson => {
+    savableStruct[lesson.name] = JSON.stringify(lesson);
+  });
+  await db.collection('lessons').doc(schoolName).set(savableStruct);
+}
