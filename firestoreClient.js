@@ -113,7 +113,14 @@ async function submitSchedule(schoolName, semester, scheduleObject) {
     semester,
     scheduleObject,
   )
-  db.collection('lessons').doc(schoolName).set(savableStruct);
+  // db.collection('lessons').doc(schoolName).set(savableStruct);
+}
+
+async function getAvailableSchoolNames() {
+  const ref = await db.collection('schools').get();
+  let schoolNames = []
+  ref.forEach(ref => schoolNames.push(ref.data().schoolName));
+  return schoolNames;
 }
 
 module.exports = {
@@ -127,7 +134,8 @@ module.exports = {
   getLessonsFromFirestore,
   getUserRegisteredLessons,
   uploadSchedule,
-  submitSchedule
+  submitSchedule,
+  getAvailableSchoolNames
 };
 
 async function writeSingleEntry(schoolName, semesterType, schedule) {

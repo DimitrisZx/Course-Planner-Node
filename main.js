@@ -4,8 +4,8 @@ const jsonParser = require('body-parser').json();
 const express = require('express');
 const app = express();
 const path = require('path');
-const bodyParser = require('body-parser');
 const {v4: uuid } = require('uuid');
+const { parseBufferToJsObject } = require('./helper');
 const {
   getUserInfo,
   createUserDocument,
@@ -18,43 +18,51 @@ const {
   updateUserInfo,
   uploadSchedule,
   submitSchedule,
+  getAvailableSchoolNames,
 } = require('./firestoreClient');
+
 const ValidatorHelper = require('./validationService');
-const multer = require('multer')
+const multer = require('multer');
 const upload = multer();
+
 // User defined Constants
 const PORT = process.env.PORT || 5000;
 const ALLOWEDHOST = 'http://localhost:3000';
 const JSONFILE = 'lessonsList2.json';
 
-function parseBufferToJsObject(buffer) {
-  return JSON.parse(buffer.toString('utf-8'))
-}
-
 // Get lessons list from json file
-const lessonsList = JSON.parse(fs.readFileSync(JSONFILE)).lessonsList;
-let lessonsListNew = []
+// const lessonsList = JSON.parse(fs.readFileSync(JSONFILE)).lessonsList;
+let lessonsListNew = [];
 
 async function populateList() {
   lessonsListNew = await getLessonsFromFirestore()
-}
+};
+
 function returnLessonList() {
   return lessonsListNew;
-}
+};
+
 populateList();
 // Configure Express Server
 app.use(cors({ origin: ALLOWEDHOST }))
 app.use(express.static(path.join(__dirname, 'build')));
+
+// TODO:
+/*
+  Check for existing emails/registry numbers on sign-up
+*/
+
+
 
 // Endpoints
 app.get('/checklist', () => console.log(lessonsListNew[0].days))
 app.post('/requestSignUp', jsonParser, async (req, res) => {
   await signUpUser(req.body);
   const  userDataResponse = await loginUser({email: req.body.email, password: req.body.password})
-  const {name, registryNumber, semester, email} = userDataResponse;
+  const {name, registryNumber, semester, email, uuid} = userDataResponse;
 
   if (userDataResponse) {
-    res.json({ success: true, payload: {name, registryNumber, semester, email} })
+    res.json({ success: true, payload: {name, registryNumber, semester, email, uuid} })
   } else {
     res.json({ success: false, errorMsg: 'Something went wrong :(' })
   }
@@ -80,17 +88,22 @@ app.post('/requestProfileEdit', jsonParser, async (req, res) => {
   };
   const response = createUserDocument(localId, data);
   res.json({success: false})
-})
+});
+
 app.get('/getuuid', (req, res) => res.json({id:uuid()}))
 app.get('/userInfo', (req, res) => {
   getUserInfo();
-})
+});
 
 app.post('/updateRegisteredLessons',jsonParser, async (req, res) => {
   const response = await updateUserInfo(req.body);
   console.log(response)
   res.json({ payload: response });
-})
+});
+
+app.post('/getAvailableSchools', async function (req, res) { 
+  res.json(await getAvailableSchoolNames());
+});
 
 app.get('/lessons', jsonParser, async (req, res) => {
   /* 
@@ -101,7 +114,7 @@ app.get('/lessons', jsonParser, async (req, res) => {
  const registeredLessons = await getUserRegisteredLessons(userUuid);
 
  const lessonList = returnLessonList();
- const lessonNames = lessonsList.map(item => item.name)
+ const lessonNames = lessonList.map(item => item.name)
  console.log(lessonNames)
   if (registeredLessons.length > 0) {
     res.json({ 
@@ -114,27 +127,13 @@ app.get('/lessons', jsonParser, async (req, res) => {
 
 })
 app.post('/updateSelectedLessons', jsonParser, (req, res) => {
-  res.send('ok')
+  res.send('ok');
 })
 
 // NEW API
 app.post('/signUpUser', async function (req, res) {
-
   const response = await signUpUser(req.body);
   res.send('user signed up');
-})
-
-app.get('/testLoginUser', async () => {
-  const response = await loginUser({password: '1234', email: 'myemail@eg.gr'});
-  if (response) {
-    return response;
-  } else {
-    return { msg: 'wrong credentials' }
-  };
-})
-
-app.get('getSavedSelectedLessons', async (req, res) => {
-  // console.log(req)
 })
 
 app.post('/updateSchedule', jsonParser, async function (req, res) {
@@ -143,12 +142,12 @@ app.post('/updateSchedule', jsonParser, async function (req, res) {
 
 app.post('/uploadSchedule', upload.single('myfile'), async function (req, res) {
 
-  const parsedBuffer = parseBufferToJsObject(req.file.buffer);
-  console.log(parsedBuffer);
-  if (ValidatorHelper.isValidScheduleSchema(parsedBuffer)) {
-    const response = await submitSchedule(schoolName, semester, scheduleJSON);
+  const jsonSchedule = parseBufferToJsObject(req.file.buffer);
+
+  if (ValidatorHelper.isValidScheduleSchema(jsonSchedule)) {
+    const response = await submitSchedule(jsonSchedule.schoolName, jsonSchedule.semester, jsonSchedule);
   }
 })
 
 // Start Listening
-app.listen(PORT, () => console.log(`Server up and listening on port ${PORT}`))
+app.listen(PORT, () => console.log(`Server up and listening on port ${PORT}`));

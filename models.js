@@ -15,6 +15,7 @@ class User {
     this.registryNumber = registryNumber;
     this.semester = semester;
     this.uuid = uid;
+    this.userType = "student";
   }
   
 } 
