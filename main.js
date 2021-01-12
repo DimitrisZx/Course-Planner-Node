@@ -19,6 +19,7 @@ const {
   uploadSchedule,
   submitSchedule,
   getAvailableSchoolNames,
+  writeSingleEntry
 } = require('./firestoreClient');
 
 const ValidatorHelper = require('./validationService');
@@ -62,7 +63,7 @@ app.post('/requestSignUp', jsonParser, async (req, res) => {
   const {name, registryNumber, semester, email, uuid} = userDataResponse;
 
   if (userDataResponse) {
-    res.json({ success: true, payload: {name, registryNumber, semester, email, uuid} })
+    res.json({ success: true, payload: { name, registryNumber, semester, email, uuid } })
   } else {
     res.json({ success: false, errorMsg: 'Something went wrong :(' })
   }
@@ -145,8 +146,14 @@ app.post('/uploadSchedule', upload.single('myfile'), async function (req, res) {
   const jsonSchedule = parseBufferToJsObject(req.file.buffer);
 
   if (ValidatorHelper.isValidScheduleSchema(jsonSchedule)) {
-    const response = await submitSchedule(jsonSchedule.schoolName, jsonSchedule.semester, jsonSchedule);
+    const { semesterType, schoolCode } = jsonSchedule
+    const response = await submitSchedule(jsonSchedule, semesterType,  schoolCode);
   }
+})
+
+app.get('/getSchoolsTest', async function (req, res) {
+
+writeSingleEntry();
 })
 
 // Start Listening

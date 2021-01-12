@@ -7,7 +7,8 @@ class User {
     semester,
     name,
     registryNumber,
-    uid
+    uid,
+    schooCode
   ) {
     this.email = email;
     this.password = password;
@@ -16,14 +17,13 @@ class User {
     this.semester = semester;
     this.uuid = uid;
     this.userType = "student";
+    this.schoolCode = schooCode;
   }
   
 } 
 
 class Lesson {
   name = "";
-  day = "";
-  hours = [0,0];
   semester = 0;
   type = "";
   professor = "";
@@ -37,8 +37,8 @@ class Lesson {
 
 class Semester {
   lessons = [];
-  semesterName = '';
-  schoolName = '';
+  semesterType = '';
+  schoolCode = '';
 
   constructor(lessons, semesterName, schoolName) {
     this.lessons = lessons;
@@ -49,11 +49,48 @@ class Semester {
 
 class School {
   schoolName = '';
-  semesters = [];
-  constructor(schoolName, semesters) {
+  schoolCode = '';
+  semesters = {springSemester: {}, winterSemester: {}}
+  activeSemester = "";
+  constructor(schoolName, schoolCode, activeSemester="w", springSemester=[], winterSemester=[]) {
     this.schoolName = schoolName;
-    this.semesters = semesters;
+    this.schoolCode = schoolCode;
+    this.springSemester = springSemester;
+    this.winterSemester = winterSemester;
+    this.activeSemester = activeSemester;
   }
+}
+
+function testModels () {
+
+  return new School(
+    'Αρχειονομίας Βιβλιοθηκονομίας και Συστημάτων Πληροφόρησης - ΠΑΔΑ',
+    'PADA-LIS',
+    "w",
+    new Semester(
+      [
+        new Lesson(
+          "Κατι Εφαρμογών",
+          4,
+          "spring",
+          "Ταδε",
+          [
+            { 
+              day: "Δευτέρα",
+              hours: [9,11] 
+            }
+          ]
+        )
+      ],
+      'winter',
+      'PADA-LIS'
+    ),
+    new Semester(
+      [],
+      'spring',
+      'PADA-LIS'
+    )
+  )
 }
 
 module.exports = { User, Lesson, Semester, School }

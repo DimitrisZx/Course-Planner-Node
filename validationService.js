@@ -4,7 +4,7 @@ module.exports = class ValidatorHelper {
 
   static schemaRequiredFields = {
     outerFields: [
-      "schoolName",
+      "schoolCode",
       "semesterType",
       "lessons"
     ],
