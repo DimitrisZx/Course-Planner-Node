@@ -29,10 +29,8 @@ const upload = multer();
 // User defined Constants
 const PORT = process.env.PORT || 5000;
 const ALLOWEDHOST = 'http://localhost:3000';
-const JSONFILE = 'lessonsList2.json';
 
 // Get lessons list from json file
-// const lessonsList = JSON.parse(fs.readFileSync(JSONFILE)).lessonsList;
 let lessonsListNew = [];
 
 async function populateList() {
@@ -43,7 +41,10 @@ function returnLessonList() {
   return lessonsListNew;
 };
 
-populateList();
+async function getSchoolSemesterLessons(schoolCode, semester) {
+  return await getLessonsFromFirestore(schoolCode, semester)
+}
+
 // Configure Express Server
 app.use(cors({ origin: ALLOWEDHOST }))
 app.use(express.static(path.join(__dirname, 'build')));
@@ -57,6 +58,7 @@ app.use(express.static(path.join(__dirname, 'build')));
 
 // Endpoints
 app.get('/checklist', () => console.log(lessonsListNew[0].days))
+
 app.post('/requestSignUp', jsonParser, async (req, res) => {
   await signUpUser(req.body);
   const  userDataResponse = await loginUser({email: req.body.email, password: req.body.password})
@@ -71,9 +73,12 @@ app.post('/requestSignUp', jsonParser, async (req, res) => {
 
 app.post('/requestLogin', jsonParser, async (req, res) => {
   const  userDataResponse = await loginUser({email: req.body.email, password: req.body.password})
-  const {name, registryNumber, semester, email, selectedLessons, registeredLessons, uuid, userType} = userDataResponse;
+  const { name, registryNumber, semester, email, selectedLessons, registeredLessons, uuid, userType, schoolCode } = userDataResponse;
   if (userDataResponse) {
-    res.json({ success: true, payload: {name, registryNumber, semester, email, selectedLessons, registeredLessons, uuid, userType} })
+    res.json({
+      success: true, 
+      payload: { name, registryNumber, semester, email, selectedLessons, registeredLessons, uuid, userType, schoolCode }
+    });
   } else {
     res.json({ success: false, errorMsg: 'Something went wrong :(' })
   }
@@ -112,9 +117,12 @@ app.get('/lessons', jsonParser, async (req, res) => {
     and setting the plain variable would always provide an emtpy array. 
   */
  const userUuid = req.query.uuid;
+ const userSchoolCode = req.query.schoolCode;
+ const userSemester = req.query.semester;
  const registeredLessons = await getUserRegisteredLessons(userUuid);
 
- const lessonList = returnLessonList();
+//  const lessonList = returnLessonList();
+ const lessonList = await getSchoolSemesterLessons(userSchoolCode, userSemester);
  const lessonNames = lessonList.map(item => item.name)
  console.log(lessonNames)
   if (registeredLessons.length > 0) {
@@ -127,6 +135,7 @@ app.get('/lessons', jsonParser, async (req, res) => {
   }
 
 })
+
 app.post('/updateSelectedLessons', jsonParser, (req, res) => {
   res.send('ok');
 })
@@ -152,9 +161,12 @@ app.post('/uploadSchedule', upload.single('myfile'), async function (req, res) {
 })
 
 app.get('/getSchoolsTest', async function (req, res) {
-
-writeSingleEntry();
+  writeSingleEntry();
 })
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "build", "index.html"));
+});
 
 // Start Listening
 app.listen(PORT, () => console.log(`Server up and listening on port ${PORT}`));

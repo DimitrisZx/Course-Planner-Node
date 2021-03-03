@@ -3,6 +3,7 @@ const DBKEY = require('./serviceAccountKey.json');
 const {v4: uuid } = require('uuid');
 const fs = require('fs');
 const JSONFILE = 'lessonsList2.json';
+
 // Configure Firestore
 const admin = require('firebase-admin');
 admin.initializeApp({
@@ -11,7 +12,6 @@ admin.initializeApp({
 const db = admin.firestore();
 
 // Collections References
-
 const USERS_COLL = db.collection('users');
 const SCHOOLS_COLL = db.collection('schools');
 
@@ -29,7 +29,6 @@ const signUpUser = async({ email, password, semester, registryNumber, name, scho
 
 const createUserDocument = async (userId, data) => {
   const res = await USERS_COLL.doc(userId).set(data);
-  console.log(res);
   return res;
 }
 
@@ -68,7 +67,8 @@ const updateSchedule = async (requestBody) => {
   const { userId, selectedlessons } = requestBody;
   console.log(requestBody)
   const res = await USERS_COLL.doc(userId).update({selectedLessons: selectedlessons});
-
+  console.log(res)
+  return res;
 }
 
 const getSavedSelectedLessons = async (requestBody) => {
@@ -88,8 +88,9 @@ async function writeSingleEntry() {
   const resp = await SCHOOLS_COLL.doc('LIS_PADA').collection('semesters').doc('springSemester').set(savableStruct)
 }
 
-async function getLessonsFromFirestore() {
-  const resp = await db.collection('lessons').doc('lessons').get()
+async function getLessonsFromFirestore(schoolCode="LIS_PADA", semester="springSemester") {
+  // const resp = await db.collection('lessons').doc('lessons').get()
+  const resp = await SCHOOLS_COLL.doc(schoolCode).collection('semesters').doc(semester).get()
   const list = [];
   for (let lesson in resp.data()) {
     list.push(JSON.parse(resp.data()[lesson]))
@@ -135,23 +136,6 @@ async function getAvailableSchoolNames() {
   ));
   return schoolNames;
 }
-
-// class FirestoreClient {
-//   admin = require('firebase-admin')
-//   db = require('firebase-admin').firestore();
-//   USERS_COLL = db.collection('users');
-//   SCHOOLS_COLL = db.collection('schools');
-
-//   constructor() {
-//     this.admin.initializeApp({
-//       credential: admin.credential.cert(require('./serviceAccountKey.json'))
-//     });
-//   }
-// }
-
-// (function test () {
-//   console.log(new FirestoreClient())
-// })()
 
 module.exports = {
   getSavedSelectedLessons,
