@@ -19,6 +19,6 @@
     "eslint-plugin-promise": "^4.2.1"
   },
   "scripts": {
-    "start": "nodemon main"
+    "start": "node main"
   }
 }
