@@ -20,10 +20,25 @@ async function getdb(collection) {
   snapshot.forEach(doc => console.log(doc.data().lessonsList));
 }
 
+const getAllUserIds = async() => {
+  const users = await USERS_COLL.get()
+  let ids = []
+  users.forEach(doc => {
+    ids.push(doc.id);
+  });
+  console.log(ids)
+  return ids;
+}
+
 const signUpUser = async({ email, password, semester, registryNumber, name, schoolCode }) => {
+  const userIds = await getAllUserIds();
+  if (userIds.includes(registryNumber)) {
+    return { errorMsg: 'Ο χρήστης έχει ήδη εγγραφεί.' };
+  }
   const uniqueId = uuid();
   const user = new User(email, password, semester, name, registryNumber, uniqueId, schoolCode)
   const res = await USERS_COLL.doc(registryNumber).set({ ...user });
+
   return res;
 }
 
@@ -150,7 +165,8 @@ module.exports = {
   uploadSchedule,
   submitSchedule,
   getAvailableSchoolNames,
-  writeSingleEntry
+  writeSingleEntry,
+  getAllUserIds
 };
 
 // async function writeSingleEntry(schoolName, semesterType, schedule) {

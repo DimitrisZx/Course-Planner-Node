@@ -16,7 +16,7 @@ const {
   getLessonsFromFirestore,
   getUserRegisteredLessons,
   updateUserInfo,
-  uploadSchedule,
+  getAllUserIds,
   submitSchedule,
   getAvailableSchoolNames,
   writeSingleEntry
@@ -60,7 +60,11 @@ app.use(express.static(path.join(__dirname, 'build')));
 app.get('/checklist', () => console.log(lessonsListNew[0].days))
 
 app.post('/requestSignUp', jsonParser, async (req, res) => {
-  await signUpUser(req.body);
+  const signUpResp = await signUpUser(req.body);
+  if (signUpResp.errorMsg) {
+    res.json({success: false, payload: {errorMsg: signUpResp.errorMsg} });
+    return;
+  }
   const  userDataResponse = await loginUser({email: req.body.email, password: req.body.password})
   const {name, registryNumber, semester, email, uuid} = userDataResponse;
 
@@ -167,6 +171,8 @@ app.get('/getSchoolsTest', async function (req, res) {
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "build", "index.html"));
 });
+
+app.get('/allUsers', (req, res) => console.log(getAllUserIds()) )
 
 // Start Listening
 app.listen(PORT, () => console.log(`Server up and listening on port ${PORT}`));
