@@ -1,5 +1,12 @@
 const { User } = require('./models');
-const DBKEY = require('./serviceAccountKey.json');
+let DBKEY;
+
+try {
+  DBKEY = require('./serviceAccountKey.json');
+} catch {
+  DBKEY = process.env.dbkey;
+}
+
 const {v4: uuid } = require('uuid');
 const fs = require('fs');
 const JSONFILE = 'lessonsList2.json';
