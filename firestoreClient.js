@@ -4,7 +4,7 @@ let DBKEY;
 try {
   DBKEY = require('./serviceAccountKey.json');
 } catch {
-  DBKEY = process.env.dbkey;
+  DBKEY = JSON.parse(process.env.dbkey);
 }
 
 const {v4: uuid } = require('uuid');
