@@ -119,13 +119,11 @@ async function writeSingleEntry() {
   lessonsList.forEach(lesson => {
     savableStruct[lesson.name] = JSON.stringify(lesson);
   })
-  // await db.collection('lessons').doc('lessons').set(savableStruct)
   console.log(savableStruct)
   const resp = await SCHOOLS_COLL.doc('LIS_PADA').collection('semesters').doc('springSemester').set(savableStruct)
 }
 
 async function getLessonsFromFirestore(schoolCode="LIS_PADA", semester="springSemester") {
-  // const resp = await db.collection('lessons').doc('lessons').get()
   const resp = await SCHOOLS_COLL.doc(schoolCode).collection('semesters').doc(semester).get()
   const list = [];
   for (let lesson in resp.data()) {
@@ -189,12 +187,3 @@ module.exports = {
   writeSingleEntry,
   getAllUserIds
 };
-
-// async function writeSingleEntry(schoolName, semesterType, schedule) {
-//   const lessonsList = JSON.parse(fs.readFileSync(JSONFILE)).lessonsList; // REPLACE WITH UPLOADED JSON
-//   const savableStruct = {};
-//   lessonsList.forEach(lesson => {
-//     savableStruct[lesson.name] = JSON.stringify(lesson);
-//   });
-//   await db.collection('lessons').doc(schoolName).set(savableStruct);
-// }
