@@ -12,11 +12,9 @@ const {
   signUpUser,
   loginUser,
   updateSchedule,
-  getSavedSelectedLessons, 
   getLessonsFromFirestore,
   getUserRegisteredLessons,
   updateUserInfo,
-  getAllUserIds,
   submitSchedule,
   getAvailableSchoolNames,
   writeSingleEntry
@@ -60,10 +58,10 @@ app.post('/requestSignUp', jsonParser, async (req, res) => {
     return;
   }
   const  userDataResponse = await loginUser({email: req.body.email, password: req.body.password})
-  const {name, registryNumber, semester, email, uuid} = userDataResponse;
+  const {name, registryNumber, semester, email, uuid, schoolCode} = userDataResponse;
 
   if (userDataResponse) {
-    res.json({ success: true, payload: { name, registryNumber, semester, email, uuid } })
+    res.json({ success: true, payload: { name, registryNumber, semester, email, uuid, schoolCode } })
   } else {
     res.json({ success: false, errorMsg: 'Something went wrong :(' })
   }
@@ -119,7 +117,6 @@ app.get('/lessons', jsonParser, async (req, res) => {
  const userSemester = req.query.semester;
  const registeredLessons = await getUserRegisteredLessons(userUuid);
 
-//  const lessonList = returnLessonList();
  const lessonList = await getSchoolSemesterLessons(userSchoolCode, userSemester);
  const lessonNames = lessonList.map(item => item.name)
  console.log(lessonNames)

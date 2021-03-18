@@ -37,7 +37,21 @@ const getAllUserIds = async() => {
   return ids;
 }
 
+const isNumber = (input) => {
+  return !isNaN(input);
+}
+
+const isInRange = (input) => {
+  return ['1','2','3','4','5','6','7','8'].includes(input);
+}
+
 const signUpUser = async({ email, password, semester, registryNumber, name, schoolCode }) => {
+  if ( !isNumber(semester)) {
+    return { errorMsg: 'Ο αριθμός εξαμήνου πρέπει να είναι απλός αριθμός, για παράδειγμα "4"' }
+  }
+  if(!isInRange(semester)) {
+    return { errorMsg: 'Ο αριθμός εξαμήνου πρέπει να είναι από 1 έως 8' }
+  }
   const userIds = await getAllUserIds();
   if (userIds.includes(registryNumber)) {
     return { errorMsg: 'Ο χρήστης έχει ήδη εγγραφεί.' };
